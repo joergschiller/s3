@@ -72,6 +72,7 @@ module S3
     # Generates temporary URL for given resource
     #
     # ==== Options
+    # * <tt>:endpoint</tt> - Endpoint of bucket in which the resource resides
     # * <tt>:bucket</tt> - Bucket in which the resource resides
     # * <tt>:resource</tt> - Path to the resouce you want to create
     #   a temporary link to
@@ -90,7 +91,7 @@ module S3
       resource = options[:resource]
       access_key = options[:access_key]
       expires = options[:expires_at].to_i
-      host = S3::HOST
+      host = options[:endpoint] || S3::DEFAULT_ENDPOINT
 
       if options[:add_bucket_to_host]
         host = bucket + '.' + host
@@ -110,6 +111,7 @@ module S3
     private
 
     def self.canonicalized_signature(options)
+      endpoint = options[:endpoint] || S3::DEFAULT_ENDPOINT
       headers = options[:headers] || {}
       host = options[:host] || ""
       resource = options[:resource]
@@ -120,7 +122,7 @@ module S3
       content_md5 = headers["content-md5"] || ""
       content_type = headers["content-type"] || ""
       date = headers["x-amz-date"].nil? ? headers["date"] : ""
-      canonicalized_resource = canonicalized_resource(host, resource)
+      canonicalized_resource = canonicalized_resource(host, resource, endpoint)
       canonicalized_amz_headers = canonicalized_amz_headers(headers)
 
       string_to_sign = ""
@@ -217,7 +219,7 @@ module S3
     #
     # ==== Returns
     # String containing extracted canonicalized resource
-    def self.canonicalized_resource(host, resource)
+    def self.canonicalized_resource(host, resource, endpoint)
       # 1. Start with the empty string ("").
       string = ""
 
@@ -227,7 +229,7 @@ module S3
       # requests that don't address a bucket, do nothing. For more
       # information on virtual hosted-style requests, see Virtual
       # Hosting of Buckets.
-      bucket_name = host.sub(/\.?#{S3::HOST}\Z/, "")
+      bucket_name = host.sub(/\.?#{endpoint}\Z/, "")
       string << "/#{bucket_name}" unless bucket_name.empty?
 
       # 3. Append the path part of the un-decoded HTTP Request-URI,

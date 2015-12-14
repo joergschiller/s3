@@ -19,6 +19,22 @@ It supports *all* S3 regions through the {REST API}[http://docs.amazonwebservice
                               :secret_access_key => "...")
     #=> #<S3::Service:...>
 
+=== Using other compatible services or Amazon S3 endpoints
+
+    require "s3"
+    service = S3::Service.new(:endpoint => "other-s3-compatible-service.example"
+                              :access_key_id => "...",
+                              :secret_access_key => "...")
+    #=> #<S3::Service:...>
+
+ or Amazon S3 EU (Frankfurt)
+
+    require "s3"
+    service = S3::Service.new(:endpoint => "s3-eu-central-1.amazonaws.com"
+                              :access_key_id => "...",
+                              :secret_access_key => "...")
+    #=> #<S3::Service:...>
+
 === List buckets
 
     service.buckets

@@ -3,12 +3,12 @@ module S3
     include Parser
     include Proxies
 
-    attr_reader :access_key_id, :secret_access_key, :use_ssl, :use_vhost, :proxy
+    attr_reader :endpoint, :access_key_id, :secret_access_key, :use_ssl, :use_vhost, :proxy
 
-    # Compares service to other, by <tt>access_key_id</tt> and
+    # Compares service to other, by <tt>endpoint</tt>, <tt>access_key_id</tt>, and
     # <tt>secret_access_key</tt>
     def ==(other)
-      self.access_key_id == other.access_key_id and self.secret_access_key == other.secret_access_key
+      self.endpoint == other.endpoint and self.access_key_id == other.access_key_id and self.secret_access_key == other.secret_access_key
     end
 
     # Creates new service.
@@ -16,6 +16,7 @@ module S3
     # ==== Options
     # * <tt>:access_key_id</tt> - Access key id (REQUIRED)
     # * <tt>:secret_access_key</tt> - Secret access key (REQUIRED)
+    # * <tt>:endpoint</tt> - Endpoint of API (defaults to s3.amazonaws.com)
     # * <tt>:use_ssl</tt> - Use https or http protocol (false by
     #   default)
     # * <tt>:use_vhost</tt> - Use bucket.s3.amazonaws.com or s3.amazonaws.com/bucket (true by
@@ -31,6 +32,7 @@ module S3
       raise ArgumentError, "Missing :access_key_id." if !options[:access_key_id]
       raise ArgumentError, "Missing :secret_access_key." if !options[:secret_access_key]
 
+      @endpoint = options.fetch(:endpoint, S3::DEFAULT_ENDPOINT)
       @access_key_id = options.fetch(:access_key_id)
       @secret_access_key = options.fetch(:secret_access_key)
       @use_ssl = options.fetch(:use_ssl, false)
@@ -85,7 +87,8 @@ module S3
 
     def connection
       return @connection if defined?(@connection)
-      @connection = Connection.new(:access_key_id => @access_key_id,
+      @connection = Connection.new(:endpoint => @endpoint,
+                               :access_key_id => @access_key_id,
                                :secret_access_key => @secret_access_key,
                                :use_ssl => @use_ssl,
                                :timeout => @timeout,

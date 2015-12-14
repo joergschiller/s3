@@ -4,7 +4,7 @@ module S3
   class Connection
     include Parser
 
-    attr_accessor :access_key_id, :secret_access_key, :use_ssl, :timeout, :debug, :proxy
+    attr_accessor :endpoint, :access_key_id, :secret_access_key, :use_ssl, :timeout, :debug, :proxy
     alias :use_ssl? :use_ssl
 
     # Creates new connection object.
@@ -12,6 +12,7 @@ module S3
     # ==== Options
     # * <tt>:access_key_id</tt> - Access key id (REQUIRED)
     # * <tt>:secret_access_key</tt> - Secret access key (REQUIRED)
+    # * <tt>:endpoint</tt> - Endpoint of API (defaults to s3.amazonaws.com)
     # * <tt>:use_ssl</tt> - Use https or http protocol (false by
     #   default)
     # * <tt>:debug</tt> - Display debug information on the STDOUT
@@ -23,6 +24,7 @@ module S3
     # * <tt>:chunk_size</tt> - Size of a chunk when streaming
     #   (1048576 (1 MiB) by default)
     def initialize(options = {})
+      @endpoint = options.fetch(:endpoint, S3::DEFAULT_ENDPOINT)
       @access_key_id = options.fetch(:access_key_id)
       @secret_access_key = options.fetch(:secret_access_key)
       @use_ssl = options.fetch(:use_ssl, false)
@@ -54,7 +56,7 @@ module S3
     # ==== Returns
     # Net::HTTPResponse object -- response from the server
     def request(method, options)
-      host = options.fetch(:host, HOST)
+      host = options.fetch(:host, @endpoint)
       path = options.fetch(:path)
       body = options.fetch(:body, nil)
       params = options.fetch(:params, {})
@@ -185,7 +187,8 @@ module S3
         end
 
         unless skip_authorization
-          request["Authorization"] = Signature.generate(:host => host,
+          request["Authorization"] = Signature.generate(:endpoint => endpoint,
+                                                        :host => host,
                                                         :request => request,
                                                         :access_key_id => access_key_id,
                                                         :secret_access_key => secret_access_key)
